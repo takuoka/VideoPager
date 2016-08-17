@@ -1,0 +1,6 @@
+framework module VideoPager {
+  umbrella header "VideoPager-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,0 +1,6 @@
+framework module Pods_VideoPager_Tests {
+  umbrella header "Pods-VideoPager_Tests-umbrella.h"
+
+  export *
+  module * { export * }
+}

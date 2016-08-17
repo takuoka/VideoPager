@@ -1,0 +1,31 @@
+{
+  "name": "VideoPager",
+  "version": "0.1.0",
+  "summary": "A short description of VideoPager.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/<GITHUB_USERNAME>/VideoPager",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "Takuya Okamoto": "blackn.red42@gmail.com"
+  },
+  "source": {
+    "git": "https://github.com/<GITHUB_USERNAME>/VideoPager.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "source_files": "VideoPager/Classes/**/*",
+  "resources": "VideoPager/Assets/*.xcassets",
+  "dependencies": {
+    "RxSwift": [
+
+    ],
+    "RxCocoa": [
+
+    ]
+  }
+}
