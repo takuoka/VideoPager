@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'VideoPager_Example' do
+  pod 'VideoPager', :path => '../'
+
+  target 'VideoPager_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
