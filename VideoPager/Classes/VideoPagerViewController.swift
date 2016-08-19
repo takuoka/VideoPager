@@ -16,10 +16,14 @@ public protocol VideoPagerViewControllerDelegate: class {
 
 public class VideoPagerViewController: UIViewController {
     
-    public var delegate: VideoPagerViewControllerDelegate!
+    public var delegate: VideoPagerViewControllerDelegate?
     
     private var pagingCollectionView: PagingCollectionView!
     private var viewDidLoadClosure: (()->Void)?
+    
+    convenience public init() {
+        self.init(cellType: VideoPagerCell.self)
+    }
     
     /// you can override VideoPagerCell and set it
     public init<T: VideoPagerCell>(cellType: T.Type) {
@@ -65,10 +69,10 @@ public class VideoPagerViewController: UIViewController {
 extension VideoPagerViewController: PagingCollectionViewDelegate {
     
     func pagingCollectionView(collectionView: PagingCollectionView, configureCell cell: VideoPagerCell, index: Int) {
-        delegate.videoPagerViewController(self, configureCell: cell, index: index)
+        delegate?.videoPagerViewController(self, configureCell: cell, index: index)
     }
     
     func pagingCollectionView(collectionView: PagingCollectionView, didSelectItemAtIndexPath index: Int) {
-        delegate.videoPagerViewController(self, didSelectItemAtIndexPath: index)
+        delegate?.videoPagerViewController(self, didSelectItemAtIndexPath: index)
     }
 }

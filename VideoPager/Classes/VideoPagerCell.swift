@@ -28,12 +28,12 @@ public class VideoPagerCell: UICollectionViewCell {
         contentView.insertSubview(playerView, atIndex: 0)
     }
     
+    /// please override
     public func didFailedToPlay() {
-        // do someting
     }
 
+    /// please override
     public func didEndPlayback() {
-        // do someting
     }
 
     func activate(url: NSURL) {

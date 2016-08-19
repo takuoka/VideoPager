@@ -22,33 +22,42 @@ it, simply add the following line to your Podfile:
 pod "VideoPager"
 ```
 
-## Usage
+```swift
+import VideoPager
+```
 
-### Override `VideoPagerCell`
+## Simple Usage
+
+```swift
+let videoPager = VideoPagerViewController()
+
+videoPager.updateUrls(urls)
+```
+
+## Custom Cell
 
 ```swift
 class YourCell: VideoPagerCell {
 
     override func initialize() {
         super.initialize()
-        // do someting
+        // do something
     }
 
     override func didEndPlayback() {
-        // do someting
+        // do something
     }
 
     override func didFailedToPlay() {
-        // do someting
+        // do something
     }    
 }
 ```
 
-### Create `VideoPagerViewController`
+### set your custom cell
 
 ```swift
 let videoPager = VideoPagerViewController(cellType: YourCell.self)
-videoPager.delegate = self
 ```
 
 or
@@ -56,16 +65,35 @@ or
 ```swift
 let cellNib = UINib(nibName: "YourCell", bundle: nil)
 let videoPager = VideoPagerViewController(videoPagerCellNib: cellNib)
+```
+
+### configure your cell with `VideoPagerViewControllerDelegate`
+
+```swift
 videoPager.delegate = self
 ```
 
+```swift
+
+extension ViewController: VideoPagerViewControllerDelegate {
+
+    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, configureCell cell: VideoPagerCell, index: Int) {
+        if let cell = cell as? YourCell {
+            // please configure cell
+        }
+    }
+
+    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didSelectItemAtIndexPath index: Int) {
+        // do something
+    }
+}
+```
+
+---------------------
+
 You can also override `VideoPagerViewController` to do something.
 
-### Add video urls
 
-```swift
-videoPager.updateUrls(urls)
-```
 
 ## Author
 
