@@ -51,7 +51,8 @@ let videoPager = VideoPagerViewController(cellType: YourCell.self)
 videoPager.delegate = self
 ```
 
-#### Create from Nib
+if you want to create from nib:
+
 ```swift
 let cellNib = UINib(nibName: "YourCell", bundle: nil)
 let videoPager = VideoPagerViewController(videoPagerCellNib: cellNib)
