@@ -64,7 +64,6 @@ You can also override `VideoPagerViewController` to do something.
 ### Add video urls
 
 ```swift
-// add urls of video
 videoPager.updateUrls(urls)
 ```
 
