@@ -92,11 +92,9 @@ class VideoView: UIView {
 extension VideoView: PlayerDelegate {
     
     func playerReady(player: Player) {
-        print("playerReady")
     }
     
     func playerPlaybackStateDidChange(player: Player) {
-        print("⏩playerPlaybackStateDidChange \(player.playbackState)")
         guard let state = player.playbackState else { return }
         switch state {
         case .Paused:
@@ -114,7 +112,6 @@ extension VideoView: PlayerDelegate {
     }
     
     func playerBufferingStateDidChange(player: Player) {
-        print("📡playerBufferingStateDidChange \(player.bufferingState)")
         guard let state = player.bufferingState else { return }
         switch state {
         case .Unknown:
@@ -134,16 +131,13 @@ extension VideoView: PlayerDelegate {
     }
     
     func playerPlaybackWillStartFromBeginning(player: Player) {
-        print("playerPlaybackWillStartFromBeginning")
     }
     
     func playerPlaybackDidEnd(player: Player) {
-        print("playerPlaybackDidEnd")
         delegate.videoView(playbackDidEnd: player)
     }
     
     func playerWillComeThroughLoop(player: Player) {
-        print("playerWillComeThroughLoop")
     }
 }
 
