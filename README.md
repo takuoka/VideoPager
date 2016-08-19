@@ -51,7 +51,7 @@ let videoPager = VideoPagerViewController(cellType: YourCell.self)
 videoPager.delegate = self
 ```
 
-if you want to create from nib:
+or
 
 ```swift
 let cellNib = UINib(nibName: "YourCell", bundle: nil)
@@ -65,24 +65,6 @@ You can also override `VideoPagerViewController` to do something.
 
 ```swift
 videoPager.updateUrls(urls)
-```
-
-### Implement `VideoPagerViewControllerDelegate`
-
-```swift
-
-extension ViewController: VideoPagerViewControllerDelegate {
-
-    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, configureCell cell: VideoPagerCell, index: Int) {
-        if let cell = cell as? YourCell {
-            // please configure cell
-        }
-    }
-
-    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didSelectItemAtIndexPath index: Int) {
-        // do something
-    }
-}
 ```
 
 ## Author
