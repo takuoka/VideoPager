@@ -141,3 +141,25 @@ extension PlayerView: ControlViewDelegate {
 private func imageFromBundle(name name: String)->UIImage? {
     return UIImage(named: name, inBundle: NSBundle(forClass: PlayerView.self), compatibleWithTraitCollection: nil)
 }
+
+// MARK: - bridging property
+extension PlayerView {
+    
+    var playIcon: UIImage {
+        set {
+            controlView.playIcon = newValue
+        }
+        get {
+            return controlView.playIcon
+        }
+    }
+    
+    var pauseIcon: UIImage {
+        set {
+            controlView.pauseIcon = newValue
+        }
+        get {
+            return controlView.pauseIcon
+        }
+    }
+}

@@ -109,3 +109,25 @@ extension ControlView {
         self.playButton.center.y = self.seekBar.center.y
     }
 }
+
+// MARK: - bridging property
+extension ControlView {
+    
+    var playIcon: UIImage {
+        set {
+            self.playButton.playIcon = newValue
+        }
+        get {
+            return self.playButton.playIcon
+        }
+    }
+    
+    var pauseIcon: UIImage {
+        set {
+            self.playButton.pauseIcon = newValue
+        }
+        get {
+            return self.playButton.pauseIcon
+        }
+    }
+}

@@ -11,6 +11,18 @@ import AVFoundation
 
 class PlayButton: UIButton {
     
+    var playIcon: UIImage {
+        didSet {
+            self.toggleIcon(pauseIcon: self.isPauseIcon)
+        }
+    }
+    
+    var pauseIcon: UIImage {
+        didSet {
+            self.toggleIcon(pauseIcon: self.isPauseIcon)
+        }
+    }
+
     private let padding: CGFloat = 8
 
     private(set) var isPauseIcon: Bool = true {
@@ -18,8 +30,6 @@ class PlayButton: UIButton {
             self.setImage(isPauseIcon ? pauseIcon : playIcon, forState: .Normal)
         }
     }
-    private let playIcon: UIImage
-    private let pauseIcon: UIImage
     
     init(playIcon: UIImage, pauseIcon: UIImage, backgroundColor: UIColor) {
         self.playIcon = playIcon

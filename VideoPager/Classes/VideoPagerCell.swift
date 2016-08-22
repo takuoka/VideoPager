@@ -59,3 +59,26 @@ extension VideoPagerCell: PlayerViewDelegate {
         self.didEndPlayback()
     }
 }
+
+
+// MARK: - bridging property
+extension VideoPagerCell {
+    
+    public var playIcon: UIImage {
+        set {
+            playerView.playIcon = newValue
+        }
+        get {
+            return playerView.playIcon
+        }
+    }
+    
+    public var pauseIcon: UIImage {
+        set {
+            playerView.pauseIcon = newValue
+        }
+        get {
+            return playerView.pauseIcon
+        }
+    }
+}
