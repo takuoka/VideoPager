@@ -19,14 +19,6 @@ class SampleCell: VideoPagerCell {
         super.initialize()
         // do someting
     }
-
-    override func didEndPlayback() {
-        // do someting
-    }
-    
-    override func didFailedToPlay() {
-        // do someting
-    }
     
     @IBAction func didTapButton(sender: AnyObject) {
         self.button.frame.size.width += 10

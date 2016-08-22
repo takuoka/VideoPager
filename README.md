@@ -22,6 +22,8 @@ it, simply add the following line to your Podfile:
 pod "VideoPager"
 ```
 
+and import to your swift file.
+
 ```swift
 import VideoPager
 ```
@@ -41,14 +43,6 @@ class YourCell: VideoPagerCell {
 
     override func initialize() {
         super.initialize()
-        // do something
-    }
-
-    override func didEndPlayback() {
-        // do something
-    }
-
-    override func didFailedToPlay() {
         // do something
     }    
 }
@@ -85,6 +79,14 @@ extension ViewController: VideoPagerViewControllerDelegate {
 
     func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didSelectItemAtIndexPath index: Int) {
         // do something
+    }
+
+    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didEndPlayback cell: VideoPagerCell) {
+      // do something
+    }
+
+    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, cellDidFailedToPlay cell: VideoPagerCell) {
+      // do something
     }
 }
 ```

@@ -8,9 +8,15 @@
 
 import UIKit
 
+protocol VideoPagerCellDelegate: class {
+    func videoPagerCell(didEndPlayback cell: VideoPagerCell)
+    func videoPagerCell(didFailedToPlay cell: VideoPagerCell)
+}
+
 /// please override this class to create your cell
 public class VideoPagerCell: UICollectionViewCell {
     
+    weak var delegate: VideoPagerCellDelegate?
     private let playerView = PlayerView()
     
     override init(frame: CGRect) {
@@ -26,14 +32,6 @@ public class VideoPagerCell: UICollectionViewCell {
     public func initialize() {
         playerView.delegate = self
         contentView.insertSubview(playerView, atIndex: 0)
-    }
-    
-    /// please override
-    public func didFailedToPlay() {
-    }
-
-    /// please override
-    public func didEndPlayback() {
     }
 
     func activate(url: NSURL) {
@@ -51,15 +49,14 @@ public class VideoPagerCell: UICollectionViewCell {
 
 extension VideoPagerCell: PlayerViewDelegate {
     
-    func playerView(didFailedToPlay view: PlayerView) {
-        self.didFailedToPlay()
+    func playerView(didEndPlayback view: PlayerView) {
+        delegate?.videoPagerCell(didEndPlayback: self)
     }
     
-    func playerView(didEndPlayback view: PlayerView) {
-        self.didEndPlayback()
+    func playerView(didFailedToPlay view: PlayerView) {
+        delegate?.videoPagerCell(didFailedToPlay: self)
     }
 }
-
 
 // MARK: - bridging property
 extension VideoPagerCell {

@@ -12,12 +12,13 @@ import VideoPager
 class ViewController: UIViewController {
 
     let urls = sampleUrls.flatMap { NSURL(string: $0) }
-
+    var videoPager: VideoPagerViewController!
+    
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
 
         let cellNib = UINib(nibName: "SampleCell", bundle: nil)
-        let videoPager = VideoPagerViewController(videoPagerCellNib: cellNib)
+        videoPager = VideoPagerViewController(videoPagerCellNib: cellNib)
         videoPager.delegate = self
         self.presentViewController(videoPager, animated: true, completion: nil)
         
@@ -34,6 +35,18 @@ extension ViewController: VideoPagerViewControllerDelegate {
     }
     
     func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didSelectItemAtIndexPath index: Int) {
+        print("👆 didSelectItem")
+        // do something
+        videoPager.scrollToNext()
+    }
+    
+    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didEndPlayback cell: VideoPagerCell) {
+        print("✋ didEndPlayback")
+        // do something
+    }
+    
+    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, cellDidFailedToPlay cell: VideoPagerCell) {
+        print("❌ didFailedToPlay")
         // do something
     }
 }

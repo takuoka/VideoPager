@@ -12,6 +12,8 @@ import UIKit
 @objc public protocol VideoPagerViewControllerDelegate: class {
     optional func videoPagerViewController(videoPagerViewController: VideoPagerViewController, configureCell cell: VideoPagerCell, index: Int)
     optional func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didSelectItemAtIndexPath index: Int)
+    optional func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didEndPlayback cell: VideoPagerCell)
+    optional func videoPagerViewController(videoPagerViewController: VideoPagerViewController, cellDidFailedToPlay cell: VideoPagerCell)
 }
 
 public class VideoPagerViewController: UIViewController {
@@ -64,6 +66,10 @@ public class VideoPagerViewController: UIViewController {
         pagingCollectionView.urls = urls
         pagingCollectionView.reloadData()
     }
+    
+    public func scrollToNext() {
+        self.pagingCollectionView.scrollToNext(isFast: true)
+    }
 }
 
 extension VideoPagerViewController: PagingCollectionViewDelegate {
@@ -74,5 +80,13 @@ extension VideoPagerViewController: PagingCollectionViewDelegate {
     
     func pagingCollectionView(collectionView: PagingCollectionView, didSelectItemAtIndexPath index: Int) {
         delegate?.videoPagerViewController?(self, didSelectItemAtIndexPath: index)
+    }
+    
+    func pagingCollectionView(collectionView: PagingCollectionView, cellDidEndPlayback cell: VideoPagerCell) {
+        delegate?.videoPagerViewController?(self, didEndPlayback: cell)
+    }
+    
+    func pagingCollectionView(collectionView: PagingCollectionView, cellDidFailedToPlay cell: VideoPagerCell) {
+        delegate?.videoPagerViewController?(self, cellDidFailedToPlay: cell)
     }
 }
