@@ -69,6 +69,13 @@ public class VideoPagerViewController: UIViewController {
     
     public func scrollToNext() {
         self.pagingCollectionView.scrollToNext(isFast: true)
+    
+    public func pauseActiveCell() {
+        pagingCollectionView.pauseActiveCell()
+    }
+    
+    public func playActiveCell() {
+        pagingCollectionView.playActiveCell()
     }
 }
 

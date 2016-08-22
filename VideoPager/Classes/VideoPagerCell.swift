@@ -45,6 +45,13 @@ public class VideoPagerCell: UICollectionViewCell {
         super.layoutSubviews()
         playerView.frame = contentView.bounds
     }
+    public func pause() {
+        playerView.pause()
+    }
+
+    public func playFromCurrentTime() {
+        playerView.playFromCurrentTime()
+    }
 }
 
 extension VideoPagerCell: PlayerViewDelegate {

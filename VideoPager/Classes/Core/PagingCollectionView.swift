@@ -34,7 +34,7 @@ class PagingCollectionView: UICollectionView {
     // config
     private let slowScrollAnimationDuration: NSTimeInterval = 1
     private let slowScrollAcnimationDelay: NSTimeInterval = 0.2
-
+    
     convenience init<T: VideoPagerCell>(frame: CGRect, cellType: T.Type) {
         self.init(frame: frame)
         self.registerClass(cellType)
@@ -68,6 +68,14 @@ class PagingCollectionView: UICollectionView {
         isFast
             ? scrollToNextFast()
             : scrollToNextSlowly()
+    }
+    
+    func pauseActiveCell() {
+        activeCell?.pause()
+    }
+    
+    func playActiveCell() {
+        activeCell?.playFromCurrentTime()
     }
 }
 
@@ -197,6 +205,11 @@ extension PagingCollectionView {
     
     private func registerNib(nib: UINib) {
         registerNib(nib, forCellWithReuseIdentifier: CELL_ID)
+    }
+    
+    var activeCell: VideoPagerCell? {
+        let indexPath = NSIndexPath(forItem: activeIndex, inSection: 0)
+        return self.cellForItemAtIndexPath(indexPath) as? VideoPagerCell
     }
 }
 

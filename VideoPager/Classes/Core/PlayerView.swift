@@ -75,6 +75,14 @@ class PlayerView: UIView {
     func setUrlAndPlay(url: NSURL) {
         videoView.play(url)
     }
+    
+    func pause() {
+        videoView.pause()
+    }
+    
+    func playFromCurrentTime() {
+        videoView.playFromCurrentTime()
+    }
 }
 
 extension PlayerView: VideoViewDelegate {
