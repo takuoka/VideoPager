@@ -45,6 +45,11 @@ public class VideoPagerCell: UICollectionViewCell {
         super.layoutSubviews()
         playerView.frame = contentView.bounds
     }
+    
+    public func didStartPlayback() {
+        // override method
+    }
+    
     public func pause() {
         playerView.pause()
     }
@@ -55,6 +60,10 @@ public class VideoPagerCell: UICollectionViewCell {
 }
 
 extension VideoPagerCell: PlayerViewDelegate {
+    
+    func playerView(didStartPlayback view: PlayerView) {
+        didStartPlayback()
+    }
     
     func playerView(didEndPlayback view: PlayerView) {
         delegate?.videoPagerCell(didEndPlayback: self)

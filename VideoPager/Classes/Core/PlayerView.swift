@@ -14,6 +14,7 @@ import RxSwift
 protocol PlayerViewDelegate: class {
     func playerView(didFailedToPlay view: PlayerView)
     func playerView(didEndPlayback view: PlayerView)
+    func playerView(didStartPlayback view: PlayerView)
 }
 
 // videoView + controlView = PlayerView
@@ -113,6 +114,10 @@ extension PlayerView: VideoViewDelegate {
     }
     
     func videoView(bufferingProgressDidChange bufferProgress: Float) {
+    }
+    
+    func videoViewDidStartPlayback() {
+        delegate?.playerView(didStartPlayback: self)
     }
 }
 

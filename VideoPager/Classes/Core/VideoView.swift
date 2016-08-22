@@ -17,6 +17,7 @@ protocol VideoViewDelegate: class {
     func videoView(playbackDidFailed player: Player)
     func videoView(bufferingProgressDidChange bufferProgress: Float)// TODO: call
     func videoView(shouldTogglePlayerButtonIconIsPause isPauseIcon: Bool)
+    func videoViewDidStartPlayback()
 }
 
 /// just play the video.
@@ -31,6 +32,13 @@ class VideoView: UIView {
     private weak var player: Player?
     private var disposeBag = DisposeBag()
     private var pausedByUser = false
+    private var isStartedPlayback = false {
+        didSet {
+            if !oldValue && isStartedPlayback {
+                delegate.videoViewDidStartPlayback()
+            }
+        }
+    }
     
     init() {
         super.init(frame: CGRect.zero)
@@ -52,6 +60,7 @@ class VideoView: UIView {
     
     func play(url: NSURL) {
         shouldShowIndicator = true
+        isStartedPlayback = false
         // get singletone
         player = self.dynamicType.sharedPlayer
         player!.delegate = self
@@ -102,6 +111,9 @@ extension VideoView: PlayerDelegate {
         case .Playing:
             if let bufferingState = player.bufferingState where bufferingState == .Ready {
                 shouldShowIndicator = false
+                if !isStartedPlayback {
+                    isStartedPlayback = true
+                }
             }
         case .Stopped:
             break
@@ -123,6 +135,9 @@ extension VideoView: PlayerDelegate {
                 player.playFromCurrentTime()
             }
             shouldShowIndicator = false
+            if !isStartedPlayback {
+                isStartedPlayback = true
+            }
         }
     }
     
