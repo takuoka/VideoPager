@@ -58,6 +58,7 @@ public class VideoPagerViewController: UIViewController {
     
     public override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
+        pagingCollectionView.contentInset = UIEdgeInsetsZero
         pagingCollectionView.activateFirstCell()
     }
     
@@ -68,7 +69,8 @@ public class VideoPagerViewController: UIViewController {
     }
     
     public func scrollToNext() {
-        self.pagingCollectionView.scrollToNext(isFast: true)
+        pagingCollectionView.scrollToNext(isFast: true)
+    }
     
     public func pauseActiveCell() {
         pagingCollectionView.pauseActiveCell()
