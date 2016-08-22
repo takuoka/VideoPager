@@ -9,9 +9,9 @@
 import Foundation
 import UIKit
 
-public protocol VideoPagerViewControllerDelegate: class {
-    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, configureCell cell: VideoPagerCell, index: Int)
-    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didSelectItemAtIndexPath index: Int)
+@objc public protocol VideoPagerViewControllerDelegate: class {
+    optional func videoPagerViewController(videoPagerViewController: VideoPagerViewController, configureCell cell: VideoPagerCell, index: Int)
+    optional func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didSelectItemAtIndexPath index: Int)
 }
 
 public class VideoPagerViewController: UIViewController {
@@ -69,10 +69,10 @@ public class VideoPagerViewController: UIViewController {
 extension VideoPagerViewController: PagingCollectionViewDelegate {
     
     func pagingCollectionView(collectionView: PagingCollectionView, configureCell cell: VideoPagerCell, index: Int) {
-        delegate?.videoPagerViewController(self, configureCell: cell, index: index)
+        delegate?.videoPagerViewController?(self, configureCell: cell, index: index)
     }
     
     func pagingCollectionView(collectionView: PagingCollectionView, didSelectItemAtIndexPath index: Int) {
-        delegate?.videoPagerViewController(self, didSelectItemAtIndexPath: index)
+        delegate?.videoPagerViewController?(self, didSelectItemAtIndexPath: index)
     }
 }
