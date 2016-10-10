@@ -11,14 +11,17 @@ import UIKit
 protocol PagingCollectionViewDelegate: class {
     func pagingCollectionView(collectionView: PagingCollectionView, configureCell cell: VideoPagerCell, index: Int)
     func pagingCollectionView(collectionView: PagingCollectionView, didSelectItemAtIndexPath index: Int)
-    func pagingCollectionView(collectionView: PagingCollectionView, cellDidEndPlayback cell: VideoPagerCell)
+    func pagingCollectionView(collectionView: PagingCollectionView, didPlayToEndTime cell: VideoPagerCell)
     func pagingCollectionView(collectionView: PagingCollectionView, cellDidFailedToPlay cell: VideoPagerCell)
+    func pagingCollectionView(collectionView: PagingCollectionView, didStopScrollAt index: Int, length: Int)
 }
 
 class PagingCollectionView: UICollectionView {
     
     var urls: [NSURL] = []
     weak var customDelegate: PagingCollectionViewDelegate!
+    var activeCell: VideoPagerCell?
+    
     private let CELL_ID = "CELL"
     private var activeIndex: Int = 0
     private var isScrollStopped = true {
@@ -31,20 +34,24 @@ class PagingCollectionView: UICollectionView {
         }
     }
     private var didStopAnimationOfAutoScroll: () -> Void = {}
+    private var fastScrollComplitionTimer: NSTimer?
     // config
     private let slowScrollAnimationDuration: NSTimeInterval = 1
     private let slowScrollAcnimationDelay: NSTimeInterval = 0.2
-    
-    convenience init<T: VideoPagerCell>(frame: CGRect, cellType: T.Type) {
+    var firstCell: VideoPagerCell? {
+        return cellForItemAtIndexPath(NSIndexPath(forItem: 0, inSection: 0)) as? VideoPagerCell
+    }
+
+    convenience init<T: VideoPagerCell>(frame: CGRect = CGRect.zero, cellType: T.Type) {
         self.init(frame: frame)
         self.registerClass(cellType)
     }
 
-    convenience init(frame: CGRect, videoPagerCellNib: UINib) {
+    convenience init(frame: CGRect = CGRect.zero, videoPagerCellNib: UINib) {
         self.init(frame: frame)
         registerNib(videoPagerCellNib)
     }
-    
+
     private init(frame: CGRect) {
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = UIScreen.mainScreen().bounds.size
@@ -54,33 +61,29 @@ class PagingCollectionView: UICollectionView {
         self.pagingEnabled = true
         self.delegate = self
         self.dataSource = self
+        self.scrollsToTop = false
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func activateFirstCell() {
-        activate(0)
-    }
-    
     func scrollToNext(isFast isFast: Bool) {
+        activeCell?.playerWillEndPlayIfNotEnded()
         isFast
             ? scrollToNextFast()
             : scrollToNextSlowly()
     }
-    
-    func pauseActiveCell() {
-        activeCell?.pause()
-    }
-    
-    func playActiveCell() {
-        activeCell?.playFromCurrentTime()
-    }
 }
 
 // MARK: - logic
+
 extension PagingCollectionView {
+
+    func activateFirstCell() {
+        activate(0)
+        activeCell?.didAppear()
+    }
     
     private func didStopScroll() {
         let visibleCells = self.visibleCells()
@@ -99,16 +102,19 @@ extension PagingCollectionView {
         // activate
         activatingCell.layer.borderColor = UIColor.purpleColor().CGColor
         if indexPath.item != activeIndex {
+            activeCell?.playerWillEndPlayIfNotEnded()
             activate(indexPath.item)
+            activeCell?.didAppear()
         }
+        customDelegate.pagingCollectionView(self, didStopScrollAt: indexPath.item, length: urls.count)
     }
 }
 
 extension PagingCollectionView: VideoPagerCellDelegate {
 
-    func videoPagerCell(didEndPlayback cell: VideoPagerCell) {
+    func videoPagerCell(didPlayToEndTime cell: VideoPagerCell) {
         self.scrollToNext(isFast: false)
-        customDelegate.pagingCollectionView(self, cellDidEndPlayback: cell)
+        customDelegate.pagingCollectionView(self, didPlayToEndTime: cell)
     }
 
     func videoPagerCell(didFailedToPlay cell: VideoPagerCell) {
@@ -137,12 +143,16 @@ extension PagingCollectionView: UICollectionViewDataSource {
         return cell
     }
     
+    func collectionView(collectionView: UICollectionView, willDisplayCell cell: UICollectionViewCell, forItemAtIndexPath indexPath: NSIndexPath) {
+        (cell as? VideoPagerCell)?.willDisplay()
+    }
 }
 
 extension PagingCollectionView: UICollectionViewDelegate {
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         self.customDelegate.pagingCollectionView(self, didSelectItemAtIndexPath: indexPath.item)
+        (collectionView.cellForItemAtIndexPath(indexPath) as? VideoPagerCell)?.didTapCell()
     }
 }
 
@@ -170,13 +180,15 @@ extension PagingCollectionView: UIScrollViewDelegate {
 }
 
 // MARK: private util methods
+
 extension PagingCollectionView {
     
     private func activate(index: Int) {
         guard let cell = cellForItemAtIndexPath(NSIndexPath(forItem: index, inSection: 0)) as? VideoPagerCell else { return }
         let url = urls[index]
         cell.activate(url)
-        self.activeIndex = index
+        activeIndex = index
+        activeCell = cell
     }
 
     func getCenterCell(cells: [UICollectionViewCell]) -> UICollectionViewCell? {
@@ -206,14 +218,10 @@ extension PagingCollectionView {
     private func registerNib(nib: UINib) {
         registerNib(nib, forCellWithReuseIdentifier: CELL_ID)
     }
-    
-    var activeCell: VideoPagerCell? {
-        let indexPath = NSIndexPath(forItem: activeIndex, inSection: 0)
-        return self.cellForItemAtIndexPath(indexPath) as? VideoPagerCell
-    }
 }
 
 // MARK: - Auto Scroll Animation
+
 extension PagingCollectionView {
     
     private func scrollToNextSlowly() {
@@ -223,20 +231,22 @@ extension PagingCollectionView {
     }
     
     private func scrollToNextFast() {
-        self.scrollEnabled = false
-        // scroll animation provided by UIKit
-        let nextIndexPath = NSIndexPath(
-            forItem: activeIndex + 1,
-            inSection: 0
-        )
-        if self.numberOfItemsInSection(0) > nextIndexPath.item {
-            self.scrollToItemAtIndexPath(nextIndexPath, atScrollPosition: .Top, animated: true)
-            delay(1) { [weak self] in
-                guard let wself = self else { return }
-                wself.scrollEnabled = true
-                wself.isScrollStopped = true
-                wself.activate(nextIndexPath.item)
-            }
+        let nextIndexPath = NSIndexPath(forItem: activeIndex + 1, inSection: 0)
+        guard self.numberOfItemsInSection(0) > nextIndexPath.item else {
+            scrollEnabled = true
+            userInteractionEnabled = true
+            return
+        }
+        scrollEnabled = false
+        userInteractionEnabled = false
+        scrollToItemAtIndexPath(nextIndexPath, atScrollPosition: .Top, animated: true)
+        fastScrollComplitionTimer?.invalidate()
+        fastScrollComplitionTimer = NSTimer.schedule(delay: 0.5) { [weak self] _ in
+            guard let wself = self else { return }
+            wself.scrollEnabled = true
+            wself.userInteractionEnabled = true
+            wself.isScrollStopped = true
+            wself.activate(nextIndexPath.item)
         }
     }
     
@@ -294,13 +304,4 @@ extension PagingCollectionView {
         self.didStopAnimationOfAutoScroll()
         self.didStopAnimationOfAutoScroll = {}
     }
-}
-
-private func delay(delay: Double, closure:()->()) {
-    dispatch_after(
-        dispatch_time(
-            DISPATCH_TIME_NOW,
-            Int64(delay * Double(NSEC_PER_SEC))
-        ),
-        dispatch_get_main_queue(), closure)
 }

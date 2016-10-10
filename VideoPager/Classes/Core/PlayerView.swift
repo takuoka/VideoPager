@@ -13,36 +13,28 @@ import RxSwift
 
 protocol PlayerViewDelegate: class {
     func playerView(didFailedToPlay view: PlayerView)
-    func playerView(didEndPlayback view: PlayerView)
+    func playerView(didPlayToEndTime view: PlayerView)
     func playerView(didStartPlayback view: PlayerView)
+    func playerView(didChangeSpeedRate rate: Float)
+    func playerView(didChangeSkipEnabledState front: Bool, back: Bool)
+    func playerView(didChangeCurrentTime currentTime: NSTimeInterval, duration: NSTimeInterval)
+    func playerView(playButtonIconShouldBeChangeToPauseIcon isPauseButton: Bool)
+    func playerView(controlViewsShouldBeDisable disable: Bool)
+    func playerView(activityIndicatorShouldBeVisible visible: Bool)
 }
 
-// videoView + controlView = PlayerView
+/// videoView + control UI
 class PlayerView: UIView {
 
+    let bottomLayerView = UIView()
     private let videoView = VideoView()
-    private let controlView: ControlView
+    let middleLayerView = UIView()
     
-    weak var delegate: PlayerViewDelegate?
-    private let activityIndicator: UIActivityIndicatorView
-    private var isDraggingSeekBar = false
+    weak var delegate: PlayerViewDelegate!
+    var enableFadeAnimation = true
     private var disposeBag = DisposeBag()
-
-    init(
-        playIcon: UIImage = imageFromBundle(name: "play")!,
-        pauseIcon: UIImage = imageFromBundle(name: "pause")!,
-        playButtonBackgroundColor: UIColor = UIColor.blackColor().colorWithAlphaComponent(0.3),
-        timerFont: UIFont = UIFont.systemFontOfSize(12),
-        timerTextColor: UIColor = UIColor.whiteColor(),
-        minimumTrackColor: UIColor = UIColor.whiteColor().colorWithAlphaComponent(0.95),
-        maximumTrackColor: UIColor = UIColor(white: 0.2, alpha: 0.95),
-        bufferProgressColor: UIColor = UIColor.redColor().colorWithAlphaComponent(0.8),
-        activityIndicatorStyle: UIActivityIndicatorViewStyle = .WhiteLarge,
-        activityIndicatorColor: UIColor = UIColor.redColor()
-    ) {
-        self.controlView = ControlView(playIcon: playIcon, pauseIcon: pauseIcon, playButtonBackgroundColor: playButtonBackgroundColor, timerFont: timerFont, timerTextColor: timerTextColor, minimumTrackColor: minimumTrackColor, maximumTrackColor: maximumTrackColor, bufferProgressColor: bufferProgressColor)
-        self.activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: activityIndicatorStyle)
-        self.activityIndicator.color = activityIndicatorColor
+    
+    init() {
         super.init(frame: CGRect.zero)
         initialize()
     }
@@ -53,126 +45,173 @@ class PlayerView: UIView {
     
     func initialize() {
         videoView.delegate = self
-        controlView.delegate = self
-        self.addSubview(videoView)
-        self.addSubview(controlView)
-        self.addSubview(self.activityIndicator)
-        videoView.rx_observe(Bool.self, "shouldShowIndicator").subscribeNext { [weak self] value in
-            guard let shouldShowIndicator = value, wself = self else { return }
-            shouldShowIndicator
-                ? wself.activityIndicator.startAnimating()
-                : wself.activityIndicator.stopAnimating()
+        addSubview(bottomLayerView)
+        addSubview(videoView)
+        addSubview(middleLayerView)
+        videoView.rx_observe(Bool.self, "shouldShowIndicator").subscribeOn(MainScheduler.instance).subscribeNext { [weak self] value in
+            guard let shouldShowIndicator = value else { return }
+            self?.delegate?.playerView(activityIndicatorShouldBeVisible: shouldShowIndicator)
         }
         .addDisposableTo(self.disposeBag)
+        togglePlayer(visible: false, animated: false)
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        videoView.frame = self.bounds
-        controlView.frame = self.bounds
-        activityIndicator.center = CGPoint(x: self.frame.width / 2, y: self.frame.height / 2)
+        videoView.frame = bounds
+        middleLayerView.frame = bounds
+        bottomLayerView.frame = bounds
     }
     
+    // MARK: - control methods
+    
     func setUrlAndPlay(url: NSURL) {
+        delegate.playerView(activityIndicatorShouldBeVisible: true)
         videoView.play(url)
     }
     
-    func pause() {
-        videoView.pause()
+    func pause(bySystem bySystem: Bool = false) {
+        videoView.pause(bySystem: bySystem)
+        delegate.playerView(playButtonIconShouldBeChangeToPauseIcon: false)
+    }
+    
+    func stop() {
+        videoView.stop()
+        delegate.playerView(playButtonIconShouldBeChangeToPauseIcon: false)
     }
     
     func playFromCurrentTime() {
+        delegate.playerView(playButtonIconShouldBeChangeToPauseIcon: true)
         videoView.playFromCurrentTime()
+    }
+    
+    func restorePlayer() {
+        delegate.playerView(activityIndicatorShouldBeVisible: false)
+        let result = videoView.restorePlayer()
+        if result == .ReCreatePlayerAndPlayed {
+            togglePlayer(visible: false, animated: false)
+        }
+        delegate.playerView(playButtonIconShouldBeChangeToPauseIcon: result != .NotNeededToPlay)
+    }
+    
+    func resetControlView() {
+        delegate.playerView(playButtonIconShouldBeChangeToPauseIcon: true)
+        delegate.playerView(activityIndicatorShouldBeVisible: false)
+        togglePlayer(visible: false, animated: false)
     }
 }
 
 extension PlayerView: VideoViewDelegate {
-    
-    func videoView(playbackDidEnd player: Player) {
-        delegate?.playerView(didEndPlayback: self)
+
+    func videoViewDidPlayToEndTime() {
+        delegate.playerView(didPlayToEndTime: self)
     }
     
-    func videoView(playbackDidFailed player: Player) {
-        delegate?.playerView(didFailedToPlay: self)
+    func videoViewPlaybackDidEnd() {
+    }
+    
+    func videoViewPlaybackDidFailed() {
+        delegate.playerView(didFailedToPlay: self)
     }
     
     func videoView(currentTimeDidChange time: NSTimeInterval) {
-        if !isDraggingSeekBar {
-            controlView.setPlayingTimeLabelText(sec: videoView.currentTime, duration: videoView.duration)
-            controlView.setSeekValue(videoView.currentTime / videoView.duration, animated: false)
-        }
+        delegate.playerView(didChangeCurrentTime: videoView.currentTime, duration: videoView.duration)
     }
     
     func videoView(shouldToggleIndicatorShow show: Bool) {
-        show
-            ? activityIndicator.startAnimating()
-            : activityIndicator.stopAnimating()
+        delegate.playerView(activityIndicatorShouldBeVisible: show)
     }
     
     func videoView(shouldTogglePlayerButtonIconIsPause isPauseIcon: Bool) {
-        controlView.togglePlayButtonIcon(pauseIcon: isPauseIcon)
+        delegate.playerView(playButtonIconShouldBeChangeToPauseIcon: isPauseIcon)
     }
     
     func videoView(bufferingProgressDidChange bufferProgress: Float) {
     }
     
     func videoViewDidStartPlayback() {
-        delegate?.playerView(didStartPlayback: self)
+        delegate.playerView(playButtonIconShouldBeChangeToPauseIcon: true)
+        delegate.playerView(didStartPlayback: self)
+        togglePlayer(visible: true, animated: true)
+    }
+    
+    func videoViewDidChangeSpeedRate(rate: Float) {
+        delegate.playerView(didChangeSpeedRate: rate)
+    }
+    
+    func videoViewDidChangeSkipEnabledState(front: Bool, back: Bool) {
+        delegate.playerView(didChangeSkipEnabledState: front, back: back)
     }
 }
 
-extension PlayerView: ControlViewDelegate {
+// MARK: - private uitility methods
 
-    func controlViewDidTapPlay() {
-        videoView.playFromCurrentTime()
-        controlView.togglePlayButtonIcon(pauseIcon: true)
-    }
-
-    func controlViewDidTapPause() {
-        videoView.pause()
-        controlView.togglePlayButtonIcon(pauseIcon: false)
-    }
-    
-    func controlView(didSlideSeekBar value: Double) {
-        let slidingSec = value * videoView.duration
-        controlView.setPlayingTimeLabelText(sec: slidingSec, duration: videoView.duration)
-    }
-    
-    func controlView(didStartSlide value: Double) {
-        isDraggingSeekBar = true
-        videoView.pause()
-    }
-    
-    func controlView(didEndSlide value: Double) {
-        isDraggingSeekBar = false
-        controlView.setPlayingTimeLabelText(sec: videoView.currentTime, duration: videoView.duration)
-        videoView.seek(value)
-        videoView.playFromCurrentTime()
-    }
-}
-
-private func imageFromBundle(name name: String)->UIImage? {
-    return UIImage(named: name, inBundle: NSBundle(forClass: PlayerView.self), compatibleWithTraitCollection: nil)
-}
-
-// MARK: - bridging property
 extension PlayerView {
     
-    var playIcon: UIImage {
-        set {
-            controlView.playIcon = newValue
+    private func togglePlayer(visible visible: Bool, animated: Bool) {
+        let animated = animated && enableFadeAnimation
+        videoView.toggleView(visible, animated: animated)
+        delegate?.playerView(controlViewsShouldBeDisable: !visible)
+    }
+}
+
+private extension UIView {
+
+    func toggleView(visible: Bool, animated: Bool, duration: NSTimeInterval = 0.4) {
+        if !animated {
+            self.alpha = visible ? 1 : 0
+        } else {
+            UIView.beginAnimations("showPlayerView", context: nil)
+            UIView.setAnimationDuration(duration)
+            self.alpha = visible ? 1 : 0
+            UIView.commitAnimations()
         }
+    }
+}
+
+// MARK: - bridging properties and methods
+
+extension PlayerView {
+    
+    func skipFront() {
+        videoView.skipFront()
+    }
+
+    func skipBack() {
+        videoView.skipBack()
+    }
+ 
+    func seek(value: Double) {
+        videoView.seek(value)
+    }
+    
+    func seekToTime(time: NSTimeInterval) {
+        videoView.seekToTime(time)
+    }
+    
+    var currentTime: NSTimeInterval { return videoView.currentTime }
+    
+    var duration: NSTimeInterval { return videoView.duration }
+
+    var videoGravity: String? {
         get {
-            return controlView.playIcon
+            return videoView.videoGravity
+        }
+        set {
+            videoView.videoGravity = newValue
+        }
+    }
+
+    var speedRate: Float? {
+        get {
+            return videoView.speedRate
+        }
+        set {
+            videoView.speedRate = newValue
         }
     }
     
-    var pauseIcon: UIImage {
-        set {
-            controlView.pauseIcon = newValue
-        }
-        get {
-            return controlView.pauseIcon
-        }
-    }
+    var pausedBySystem: Bool { return videoView.pausedBySystem }
+    
+    var pausedByUser: Bool { return videoView.pausedByUser }
 }

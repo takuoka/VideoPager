@@ -10,35 +10,95 @@ import Foundation
 import UIKit
 import AVFoundation
 import RxSwift
+import RxCocoa
 
 protocol VideoViewDelegate: class {
     func videoView(currentTimeDidChange time: NSTimeInterval)
-    func videoView(playbackDidEnd player: Player)
-    func videoView(playbackDidFailed player: Player)
+    func videoViewPlaybackDidEnd()
+    func videoViewPlaybackDidFailed()
     func videoView(bufferingProgressDidChange bufferProgress: Float)// TODO: call
     func videoView(shouldTogglePlayerButtonIconIsPause isPauseIcon: Bool)
     func videoViewDidStartPlayback()
+    func videoViewDidPlayToEndTime()
+    func videoViewDidChangeSpeedRate(rate: Float)
+    func videoViewDidChangeSkipEnabledState(front: Bool, back: Bool)
 }
 
-/// just play the video.
+enum RestorePlayerResult {
+    case JustPlayed
+    case ReCreatePlayerAndPlayed
+    case Failed
+    case NotNeededToPlay
+}
+
+/**
+ view just play the video
+*/
 class VideoView: UIView {
     
-    static let sharedPlayer = Player()
-
-    public weak var delegate: VideoViewDelegate!
-    public var currentTime: NSTimeInterval { return self.player?.currentTime ?? 0 }
-    public var duration: NSTimeInterval { return self.player?.maximumDuration ?? 0 }
-    public dynamic var shouldShowIndicator = false// please observe
+    static var sharedPlayer = Player()
+    class func disposeSharedPlayer() {
+        (sharedPlayer.view.superview as? VideoView)?.player = nil
+        sharedPlayer.view.removeFromSuperview()
+        sharedPlayer.delegate = nil
+        sharedPlayer.stop()
+    }
+    var singletonePlayer: Player {
+        get {
+            return self.dynamicType.sharedPlayer
+        }
+        set {
+            self.dynamicType.sharedPlayer = newValue
+        }
+    }
+    private dynamic var enableFrontSkip = false
+    private dynamic var enableBackSkip = false
+    private var skipSec: NSTimeInterval = 10
+    
+    weak var delegate: VideoViewDelegate!
+    dynamic var shouldShowIndicator = false// please observe
+    var currentTime: NSTimeInterval {
+        return self.player?.currentTime.isNaN == true ? 0 : self.player?.currentTime ?? 0
+    }
+    var duration: NSTimeInterval {
+        return self.player?.maximumDuration ?? 0
+    }
+    var videoGravity: String? {
+        get {
+            return player?.fillMode
+        }
+        set {
+            self.player?.fillMode = newValue
+        }
+    }
+    var speedRate: Float? {
+        get {
+            return player?.speedRate
+        }
+        set {
+            guard let speedRate = newValue else { return }
+            self.player?.speedRate = speedRate
+            delegate.videoViewDidChangeSpeedRate(speedRate)
+        }
+    }
+    
     private weak var player: Player?
-    private var disposeBag = DisposeBag()
-    private var pausedByUser = false
+    private var currentURL: NSURL?
+    private var seekQueue: NSTimeInterval?
+    private var lastPausedAt: NSTimeInterval?
+    var pausedByUser = false
+    var pausedBySystem = false
     private var isStartedPlayback = false {
         didSet {
             if !oldValue && isStartedPlayback {
+                shouldShowIndicator = false
                 delegate.videoViewDidStartPlayback()
             }
         }
     }
+    private var disposeBag = DisposeBag()
+
+    // MARK: - initialize
     
     init() {
         super.init(frame: CGRect.zero)
@@ -55,41 +115,120 @@ class VideoView: UIView {
     }
     
     private func initialize() {
-        self.setupObservingCallingAndHeadPhone()
+        setupObservingSkipEnabledState()
+        setupObservingCallingAndHeadPhone()
     }
+
+    // MARK: - LifeCycle
     
     func play(url: NSURL) {
         shouldShowIndicator = true
         isStartedPlayback = false
-        // get singletone
-        player = self.dynamicType.sharedPlayer
+        pausedByUser = false
+        pausedBySystem = false
+        enableFrontSkip = false
+        enableBackSkip = false
+        lastPausedAt = nil
+        // reset singletone Player
+        singletonePlayer.stop()
+        if let previousVideoView = singletonePlayer.view.superview as? VideoView {
+            previousVideoView.player = nil
+            singletonePlayer.view.removeFromSuperview()
+            if let preUrl = singletonePlayer.currentURL
+                where url.pathExtension != preUrl.pathExtension
+            {
+                singletonePlayer = Player()
+            }
+        }
+        // get singletone Player
+        player = singletonePlayer
         player!.delegate = self
         // add to this
         player!.view.frame = self.bounds
         self.addSubview(player!.view)
         // play
-        player!.setUrl(url)
-        player!.playFromBeginning()
+        setUrl(url) { [weak self] in
+            guard let wself = self else { return }
+            if let seekQueue = wself.seekQueue {
+                wself.seekToTime(seekQueue)
+                wself.seekQueue = nil
+            }
+        }
     }
+    
+    /// call when comeback from another view, because then the player property could be nil.
+    func restorePlayer() -> RestorePlayerResult {
+        if let
+            player = self.player,
+            playerSuperview = player.view.superview as? VideoView
+        where
+            playerSuperview == self
+         && player.currentURL == self.currentURL
+        {
+            guard !pausedByUser else { return .NotNeededToPlay }
+            player.playFromCurrentTime()
+            return .JustPlayed
+        }
+        else if let url = currentURL {
+            seekQueue = lastPausedAt
+            if pausedByUser {
+                play(url)
+                pausedByUser = true
+                return .NotNeededToPlay
+            }
+            play(url)
+            return .ReCreatePlayerAndPlayed
+        }
+        return .Failed
+    }
+
+    // MARK: - control video
     
     func playFromCurrentTime() {
         pausedByUser = false
+        pausedBySystem = false
         player?.playFromCurrentTime()
     }
 
-    func pause() {
-        pausedByUser = true
+    func pause(bySystem bySystem: Bool = false) {
+        if bySystem {
+            pausedBySystem = true
+        } else {
+            pausedByUser = true
+        }
         player?.pause()
+        lastPausedAt = player?.currentTime
+    }
+    
+    func stop() {
+        player?.stop()
     }
     
     func seek(value: Double) {
-        let isUnspecifiedDuration = duration >= CMTimeGetSeconds(kCMTimeIndefinite)
-        guard !isUnspecifiedDuration else {
-            return
-        }
-        shouldShowIndicator = true
-        player?.seekToTime(CMTime(seconds: self.duration * value, preferredTimescale: 1))
+        guard !duration.isNaN else { return }
+        seekToTime(duration * value)
     }
+
+    func skipFront() {
+        guard enableFrontSkip else { return }
+        seekToTime(currentTime + skipSec)
+    }
+
+    func skipBack() {
+        guard enableBackSkip else { return }
+        seekToTime(max(0, currentTime - skipSec))
+    }
+
+    func seekToTime(time: NSTimeInterval) {
+        player?.seekToTimePrecision(time)
+    }
+    
+    private func setUrl(url: NSURL, complition: (()->Void)? = nil) {
+        player?.setUrl(url, complition: complition)
+        currentURL = url
+    }
+
+    // MARK: - Life cycle of UIView
     
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -99,6 +238,10 @@ class VideoView: UIView {
 
 
 extension VideoView: PlayerDelegate {
+    
+    func playerItemDidPlayToEndTimeNotification(player: Player) {
+        delegate.videoViewDidPlayToEndTime()
+    }
     
     func playerReady(player: Player) {
     }
@@ -110,16 +253,18 @@ extension VideoView: PlayerDelegate {
             break
         case .Playing:
             if let bufferingState = player.bufferingState where bufferingState == .Ready {
-                shouldShowIndicator = false
                 if !isStartedPlayback {
                     isStartedPlayback = true
+                } else {
+                    shouldShowIndicator = false
                 }
             }
         case .Stopped:
             break
         case .Failed:
             shouldShowIndicator = false
-            delegate.videoView(playbackDidFailed: player)
+            self.dynamicType.disposeSharedPlayer()
+            delegate.videoViewPlaybackDidFailed()
         }
     }
     
@@ -131,25 +276,33 @@ extension VideoView: PlayerDelegate {
         case .Delayed:
             shouldShowIndicator = true
         case .Ready:
-            if !pausedByUser {
+            if !pausedByUser && !pausedBySystem {
                 player.playFromCurrentTime()
             }
-            shouldShowIndicator = false
             if !isStartedPlayback {
                 isStartedPlayback = true
+            } else {
+                shouldShowIndicator = false
             }
         }
     }
     
     func playerCurrentTimeDidChange(player: Player) {
-        delegate.videoView(currentTimeDidChange: player.currentTime)
+        let currentTime = player.currentTime
+        let duration = player.maximumDuration
+        if  !currentTime.isNaN && !duration.isNaN {
+            delegate.videoView(currentTimeDidChange: currentTime)
+            let remainTime = duration - currentTime
+            enableFrontSkip = remainTime > skipSec
+            enableBackSkip = currentTime > 0
+        }
     }
     
     func playerPlaybackWillStartFromBeginning(player: Player) {
     }
     
     func playerPlaybackDidEnd(player: Player) {
-        delegate.videoView(playbackDidEnd: player)
+        delegate.videoViewPlaybackDidEnd()
     }
     
     func playerWillComeThroughLoop(player: Player) {
@@ -157,11 +310,27 @@ extension VideoView: PlayerDelegate {
 }
 
 // MARK: observe calling and head-phone event
+
 extension VideoView {
+    
+    func setupObservingSkipEnabledState() {
+
+        self.rx_observeWeakly(Bool.self, "enableFrontSkip").subscribeNext { [weak self] value in
+            guard let enableFrontSkip = value, wself = self else { return }
+            wself.delegate?.videoViewDidChangeSkipEnabledState(enableFrontSkip, back: wself.enableBackSkip)
+        }
+        .addDisposableTo(self.disposeBag)
+
+        self.rx_observeWeakly(Bool.self, "enableBackSkip").subscribeNext { [weak self] value in
+            guard let enableBackSkip = value, wself = self else { return }
+            wself.delegate?.videoViewDidChangeSkipEnabledState(wself.enableFrontSkip, back: enableBackSkip)
+        }
+        .addDisposableTo(self.disposeBag)
+    }
     
     func setupObservingCallingAndHeadPhone() {
         
-        // When interrupted by calling
+        // When interrupted by callingvideoViewDidStartPlayback
         NSNotificationCenter.defaultCenter().rx_notification(AVAudioSessionInterruptionNotification)
             .subscribeOn(MainScheduler.instance)
             .subscribeNext { [weak self] (notification: NSNotification) in
@@ -181,7 +350,7 @@ extension VideoView {
             }
             .addDisposableTo(self.disposeBag)
         
-        // When the head-phone is pluged in or out
+        // When the head-phone is pluged out
         NSNotificationCenter.defaultCenter().rx_notification(AVAudioSessionRouteChangeNotification)
             .subscribeOn(MainScheduler.instance)
             .subscribeNext { [weak self] (notification: NSNotification) in

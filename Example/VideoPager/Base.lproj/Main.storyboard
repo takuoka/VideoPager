@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6211" systemVersion="14A298i" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="vXZ-lx-hvc">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15G1004" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="vXZ-lx-hvc">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6204"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
         <scene sceneID="ufC-wZ-h7g">
             <objects>
-                <viewController id="vXZ-lx-hvc" customClass="ViewController" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="vXZ-lx-hvc" customClass="ViewController" customModule="VideoPager_Example" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="jyV-Pf-zRb"/>
                         <viewControllerLayoutGuide type="bottom" id="2fi-mo-0CV"/>
@@ -15,11 +17,191 @@
                     <view key="view" contentMode="scaleToFill" id="kh9-bI-dsS">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="WSF-3r-gMO">
+                                <rect key="frame" x="246" y="285" width="108" height="30"/>
+                                <state key="normal" title="Player Sample 1"/>
+                                <connections>
+                                    <segue destination="Hqd-vY-iYV" kind="presentation" id="Wrs-FF-UaO"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lvQ-28-GuD">
+                                <rect key="frame" x="245" y="341" width="110" height="30"/>
+                                <state key="normal" title="Player Sample 2"/>
+                                <connections>
+                                    <segue destination="LYy-F8-dc5" kind="presentation" id="CdJ-it-mER"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DpU-Cj-EQM">
+                                <rect key="frame" x="249" y="229" width="102" height="30"/>
+                                <state key="normal" title="Simple Sample"/>
+                                <connections>
+                                    <segue destination="TbB-KT-9db" kind="presentation" id="nNH-Qf-Wip"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vzh-Ja-QSj">
+                                <rect key="frame" x="184" y="405" width="231" height="30"/>
+                                <state key="normal" title="Open VideoPagerViewController()"/>
+                                <connections>
+                                    <action selector="openVideoPagerViewController:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="2jc-cv-tYR"/>
+                                </connections>
+                            </button>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="lvQ-28-GuD" firstAttribute="top" secondItem="WSF-3r-gMO" secondAttribute="bottom" constant="26" id="5mY-cc-4If"/>
+                            <constraint firstItem="DpU-Cj-EQM" firstAttribute="centerX" secondItem="vzh-Ja-QSj" secondAttribute="centerX" id="8Gc-ZL-V34"/>
+                            <constraint firstItem="WSF-3r-gMO" firstAttribute="top" secondItem="DpU-Cj-EQM" secondAttribute="bottom" constant="26" id="IrB-1J-hkM"/>
+                            <constraint firstItem="WSF-3r-gMO" firstAttribute="centerX" secondItem="kh9-bI-dsS" secondAttribute="centerX" id="QdH-59-Be0"/>
+                            <constraint firstItem="DpU-Cj-EQM" firstAttribute="centerX" secondItem="kh9-bI-dsS" secondAttribute="centerX" id="SFR-pu-Y9a"/>
+                            <constraint firstItem="vzh-Ja-QSj" firstAttribute="centerX" secondItem="lvQ-28-GuD" secondAttribute="centerX" id="czB-5M-JMz"/>
+                            <constraint firstItem="WSF-3r-gMO" firstAttribute="centerY" secondItem="kh9-bI-dsS" secondAttribute="centerY" id="lO8-ZQ-mVl"/>
+                            <constraint firstItem="lvQ-28-GuD" firstAttribute="centerX" secondItem="kh9-bI-dsS" secondAttribute="centerX" id="qiO-9u-Z1J"/>
+                            <constraint firstItem="vzh-Ja-QSj" firstAttribute="top" secondItem="lvQ-28-GuD" secondAttribute="bottom" constant="34" id="rTn-3F-xCz"/>
+                            <constraint firstItem="DpU-Cj-EQM" firstAttribute="top" secondItem="vzh-Ja-QSj" secondAttribute="bottom" constant="34" id="vRv-Oi-ZdY"/>
+                        </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="8Gc-ZL-V34"/>
+                                <exclude reference="vRv-Oi-ZdY"/>
+                            </mask>
+                        </variation>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="300" y="524"/>
+        </scene>
+        <!--Sample Video Pager-->
+        <scene sceneID="xtR-8R-WPI">
+            <objects>
+                <viewController storyboardIdentifier="SampleVideoPager" id="Hqd-vY-iYV" customClass="SampleVideoPager" customModule="VideoPager_Example" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="i8v-vz-ynl"/>
+                        <viewControllerLayoutGuide type="bottom" id="fCv-sk-VV7"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="VZU-U3-WCW">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" alpha="0.80000000000000004" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="WFK-FF-iQ2">
+                                <rect key="frame" x="34" y="44" width="18" height="22"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="88" id="s8a-CT-qEr"/>
+                                    <constraint firstAttribute="height" constant="44" id="yMm-9p-LKr"/>
+                                </constraints>
+                                <state key="normal" image="Cancel"/>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="s8a-CT-qEr"/>
+                                        <exclude reference="yMm-9p-LKr"/>
+                                    </mask>
+                                </variation>
+                                <connections>
+                                    <action selector="didTapCloseButton:" destination="Hqd-vY-iYV" eventType="touchUpInside" id="jsC-bz-0ky"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="WFK-FF-iQ2" firstAttribute="top" secondItem="i8v-vz-ynl" secondAttribute="bottom" constant="24" id="79P-iV-RtZ"/>
+                            <constraint firstItem="WFK-FF-iQ2" firstAttribute="leading" secondItem="VZU-U3-WCW" secondAttribute="leadingMargin" constant="18" id="Bgc-n2-tMv"/>
+                        </constraints>
+                    </view>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="hDY-S9-Q01" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1049.5" y="988.5"/>
+        </scene>
+        <!--Sample Video Pager2-->
+        <scene sceneID="De8-b5-vzX">
+            <objects>
+                <viewController storyboardIdentifier="SampleVideoPager2" id="LYy-F8-dc5" customClass="SampleVideoPager2" customModule="VideoPager_Example" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="qzi-Ek-he1"/>
+                        <viewControllerLayoutGuide type="bottom" id="zS9-j0-pXB"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="wM0-at-rcR">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" alpha="0.80000001192092896" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ocF-AW-9Wa">
+                                <rect key="frame" x="8" y="28" width="44" height="44"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="88" id="7Pr-5e-PWY"/>
+                                    <constraint firstAttribute="height" constant="44" id="U5U-Uz-Ucg"/>
+                                    <constraint firstAttribute="width" constant="44" id="g8N-Zx-a57"/>
+                                    <constraint firstAttribute="height" constant="44" id="rpT-9v-ZGy"/>
+                                </constraints>
+                                <state key="normal" image="Cancel"/>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="7Pr-5e-PWY"/>
+                                        <exclude reference="U5U-Uz-Ucg"/>
+                                    </mask>
+                                </variation>
+                                <connections>
+                                    <action selector="didTapCloseButton:" destination="LYy-F8-dc5" eventType="touchUpInside" id="jCN-eT-1FK"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="ocF-AW-9Wa" firstAttribute="leading" secondItem="wM0-at-rcR" secondAttribute="leading" constant="8" id="Aos-Lw-oXh"/>
+                            <constraint firstItem="ocF-AW-9Wa" firstAttribute="top" secondItem="qzi-Ek-he1" secondAttribute="bottom" constant="8" id="lHo-Ju-VWe"/>
+                        </constraints>
+                    </view>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Qv3-Jh-sjK" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1049.5" y="1808.5"/>
+        </scene>
+        <!--Sample Video Pager0-->
+        <scene sceneID="aPf-km-Ts2">
+            <objects>
+                <viewController storyboardIdentifier="SampleVideoPager0" id="TbB-KT-9db" customClass="SampleVideoPager0" customModule="VideoPager_Example" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="FZx-jA-yCz"/>
+                        <viewControllerLayoutGuide type="bottom" id="bSO-dk-0lL"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="ztp-a1-uIc">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" alpha="0.80000001192092896" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q9s-D0-d59">
+                                <rect key="frame" x="24" y="28" width="18" height="22"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="88" id="9Hl-OJ-oiM"/>
+                                    <constraint firstAttribute="height" constant="44" id="vsv-P8-fiS"/>
+                                </constraints>
+                                <state key="normal" image="Cancel"/>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="9Hl-OJ-oiM"/>
+                                        <exclude reference="vsv-P8-fiS"/>
+                                    </mask>
+                                </variation>
+                                <connections>
+                                    <action selector="didTapCloseButton:" destination="TbB-KT-9db" eventType="touchUpInside" id="leV-0p-r7S"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="q9s-D0-d59" firstAttribute="leading" secondItem="ztp-a1-uIc" secondAttribute="leadingMargin" constant="8" id="O2m-f2-0Tz"/>
+                            <constraint firstItem="q9s-D0-d59" firstAttribute="top" secondItem="FZx-jA-yCz" secondAttribute="bottom" constant="8" id="Qr7-Ea-08e"/>
+                        </constraints>
+                    </view>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="23N-fh-GXX" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1049.5" y="224.5"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="Cancel" width="18" height="18"/>
+    </resources>
 </document>

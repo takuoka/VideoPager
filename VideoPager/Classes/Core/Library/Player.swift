@@ -86,6 +86,7 @@ public enum BufferingState: Int, CustomStringConvertible {
 
     func playerPlaybackWillStartFromBeginning(player: Player)
     func playerPlaybackDidEnd(player: Player)
+    func playerItemDidPlayToEndTimeNotification(player: Player)
     
     optional func playerWillComeThroughLoop(player: Player)
 }
@@ -120,7 +121,7 @@ public class Player: UIViewController {
 
     public weak var delegate: PlayerDelegate!
 
-    public func setUrl(url: NSURL) {
+    public func setUrl(url: NSURL, complition: (()->Void)? = nil) {
         // Make sure everything is reset beforehand
         if(self.playbackState == .Playing){
             self.pause()
@@ -128,7 +129,7 @@ public class Player: UIViewController {
 
         self.setupPlayerItem(nil)
         let asset = AVURLAsset(URL: url, options: .None)
-        self.setupAsset(asset)
+        self.setupAsset(asset, complition: complition)
     }
 
 
@@ -183,6 +184,12 @@ public class Player: UIViewController {
     
     public var bufferSize: Double = 10.0
     public var playbackEdgeTriggered: Bool = true
+    public var speedRate: Float = 1.0 {
+        didSet {
+            guard player.rate > 0 else { return }
+            player.rate = speedRate
+        }
+    }
 
     public var maximumDuration: NSTimeInterval! {
         get {
@@ -214,6 +221,10 @@ public class Player: UIViewController {
             }
         }
     }
+    
+    public var currentURL: NSURL? {
+        return (self.playerItem?.asset as? AVURLAsset)?.URL
+    }
 
     private var asset: AVAsset!
     private var playerItem: AVPlayerItem?
@@ -221,6 +232,10 @@ public class Player: UIViewController {
     private var player: AVPlayer!
     private var playerView: PlayerView!
     private var timeObserver: AnyObject!
+    
+    var isNormalSpeed: Bool {
+        return player.rate == 1 || player.rate == 0
+    }
     
     // MARK: object lifecycle
 
@@ -243,8 +258,9 @@ public class Player: UIViewController {
         self.player.actionAtItemEnd = .Pause
         self.player.addObserver(self, forKeyPath: PlayerRateKey, options: ([NSKeyValueObservingOptions.New, NSKeyValueObservingOptions.Old]) , context: &PlayerObserverContext)
         
-        self.timeObserver = self.player.addPeriodicTimeObserverForInterval(CMTimeMake(1, 100), queue: dispatch_get_main_queue()) { [unowned self] time in
-            self.delegate?.playerCurrentTimeDidChange(self)
+        self.timeObserver = self.player.addPeriodicTimeObserverForInterval(CMTimeMake(1, 100), queue: dispatch_get_main_queue()) { [weak self] time in
+            guard let wself = self else { return }
+            wself.delegate?.playerCurrentTimeDidChange(wself)
         }
 
         self.playbackLoops = false
@@ -300,6 +316,7 @@ public class Player: UIViewController {
     public func playFromCurrentTime() {
         self.playbackState = .Playing
         self.player.play()
+        self.player.rate = speedRate
     }
 
     public func pause() {
@@ -326,10 +343,16 @@ public class Player: UIViewController {
             return playerItem.seekToTime(time)
         }
     }
+    
+    public func seekToTimePrecision(time: NSTimeInterval) {
+        if let playerItem = self.playerItem {
+            playerItem.seekToTime(CMTimeMakeWithSeconds(time ,Int32(NSEC_PER_SEC)), toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+        }
+    }
 
     // MARK: private setup
 
-    private func setupAsset(asset: AVAsset) {
+    private func setupAsset(asset: AVAsset, complition: (()->Void)? = nil) {
         if self.playbackState == .Playing {
             self.pause()
         }
@@ -362,7 +385,7 @@ public class Player: UIViewController {
 
                 let playerItem: AVPlayerItem = AVPlayerItem(asset:self.asset)
                 self.setupPlayerItem(playerItem)
-
+                complition?()
             })
         })
     }
@@ -402,6 +425,7 @@ public class Player: UIViewController {
     // MARK: NSNotifications
 
     public func playerItemDidPlayToEndTime(aNotification: NSNotification) {
+        self.delegate?.playerItemDidPlayToEndTimeNotification(self)
         if self.playbackLoops.boolValue == true {
             self.delegate?.playerWillComeThroughLoop?(self)
             self.player.seekToTime(kCMTimeZero)
@@ -451,7 +475,7 @@ public class Player: UIViewController {
             if let item = self.playerItem {
                 self.bufferingState = .Ready
 
-                if item.playbackLikelyToKeepUp && self.playbackState == .Playing {
+                if item.playbackLikelyToKeepUp && self.playbackState == .Playing && isNormalSpeed {
                     self.playFromCurrentTime()
                 }
             }
@@ -500,7 +524,7 @@ public class Player: UIViewController {
             let bufferedTime = CMTimeGetSeconds(CMTimeAdd(timerange.start, timerange.duration))
             let currentTime = CMTimeGetSeconds(item.currentTime())
             
-            if bufferedTime - currentTime >= self.bufferSize {
+            if bufferedTime - currentTime >= self.bufferSize && isNormalSpeed {
                 self.playFromCurrentTime()
             }
         case (.Some(PlayerReadyForDisplay), &PlayerLayerObserverContext):
@@ -566,11 +590,4 @@ public class Player: UIViewController {
         }
         
     }
-}
-
-extension Player {
-
-    public func reset() {
-    }
-
 }

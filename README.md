@@ -5,6 +5,115 @@
 [![License](https://img.shields.io/cocoapods/l/VideoPager.svg?style=flat)](http://cocoapods.org/pods/VideoPager)
 [![Platform](https://img.shields.io/cocoapods/p/VideoPager.svg?style=flat)](http://cocoapods.org/pods/VideoPager)
 
+## Demo (GIF)
+
+<img src="https://github.com/entotsu/VideoPager/blob/master/sample_gif/1.gif?raw=true" alt="demo" title="demo" width="240" />
+
+* [**Demo2**](https://github.com/entotsu/VideoPager/blob/master/sample_gif/2.gif)
+* [**Demo3**](https://github.com/entotsu/VideoPager/blob/master/sample_gif/3.gif)
+
+## Available UI
+
+* seekSlider: UISlider
+
+* playIcon: UIImage
+
+* pauseIcon: UIImage
+
+* playButton: UIButto
+
+* progressView: UIProgressView
+
+* currentTimeLabel: UILabel
+
+* remainTimeLabel: UILabel
+
+* activityIndicator: UIActivityIndicatorView
+
+* playSpeedButton: UIButton
+
+* speedRateList: [Float]
+
+* frontSkipButton: UIButton
+
+* backSkipButton: UIButton
+
+* topShadowHeight: CGFloat
+
+* bottomShadowHeight: CGFloat
+
+* shadowOpacity: CGFloat
+
+* fadeEnabledViews: [UIView]
+
+# Simple Usage
+
+```swift
+let videoPager = VideoPagerViewController()
+
+videoPager.updateUrls(urls)
+```
+
+# Custom Cell
+
+```swift
+class YourCell: VideoPagerCell {
+  // your implementation
+}
+```
+
+## VideoPagerCustomUI
+You can easily implement control UI by conforming to [`VideoPagerCustomUI`](https://github.com/entotsu/VideoPager/blob/master/Docs/API.md#available-protocols-of-videopagercustomui).
+
+```swift
+class YourCell: VideoPagerCell, VideoPagerCustomUI {
+
+    // VideoPagerCustomUI
+    @IBOutlet weak var playButton: UIButton!
+    @IBOutlet weak var seekSlider: UISlider!
+}
+```
+
+
+# Custom VideoPagerViewController
+
+``` swift
+
+class CustomVideoPager: VideoPagerViewController {
+
+    required init?(coder aDecoder: NSCoder) {
+        // initialize with your cell
+        let cellNib = UINib(nibName: "CustomCell", bundle: nil)
+        super.init(coder: aDecoder, videoPagerCellNib: cellNib)
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // set urls
+        updateUrls(urls)
+    }
+
+    override func configureCell(cell: VideoPagerCell, index: Int) {
+        super.configureCell(cell, index: index)
+        // you can configure your cell with this method
+        if let cell = cell as? CustomCell {
+            cell.urlLabel.text = urls[index]
+        }
+    }
+
+    override func didSelectItemAtIndex(index: Int) {
+        super.didSelectItemAtIndex(index)
+        // you can add tap action
+        activeCell?.playOrPause()
+    }
+}
+```
+
+
+# Documentation
+
+[API document is here.](https://github.com/entotsu/VideoPager/blob/master/Docs/API.md)
+
 ## Example
 
 To run the example project, clone the repo, and run `pod install` from the Example directory first.
@@ -27,75 +136,6 @@ and import to your swift file.
 ```swift
 import VideoPager
 ```
-
-## Simple Usage
-
-```swift
-let videoPager = VideoPagerViewController()
-
-videoPager.updateUrls(urls)
-```
-
-## Custom Cell
-
-```swift
-class YourCell: VideoPagerCell {
-
-    override func initialize() {
-        super.initialize()
-        // do something
-    }    
-}
-```
-
-### set your custom cell
-
-```swift
-let videoPager = VideoPagerViewController(cellType: YourCell.self)
-```
-
-or
-
-```swift
-let cellNib = UINib(nibName: "YourCell", bundle: nil)
-let videoPager = VideoPagerViewController(videoPagerCellNib: cellNib)
-```
-
-### configure your cell with `VideoPagerViewControllerDelegate`
-
-```swift
-videoPager.delegate = self
-```
-
-```swift
-
-extension ViewController: VideoPagerViewControllerDelegate {
-
-    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, configureCell cell: VideoPagerCell, index: Int) {
-        if let cell = cell as? YourCell {
-            // please configure cell
-        }
-    }
-
-    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didSelectItemAtIndexPath index: Int) {
-        // do something
-    }
-
-    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, didEndPlayback cell: VideoPagerCell) {
-      // do something
-    }
-
-    func videoPagerViewController(videoPagerViewController: VideoPagerViewController, cellDidFailedToPlay cell: VideoPagerCell) {
-      // do something
-    }
-}
-```
-
----------------------
-
-You can also override `VideoPagerViewController` to do something.
-
-
 
 ## Author
 
